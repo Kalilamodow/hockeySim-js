@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hockeysim.js</title>
+    <script src="hockeySim.js" defer></script>
+</head>
+
+<body>
+    <h1>hockeysim.js</h1>
+    <fieldset>
+        <legend>config</legend>
+        <p>Bias (positive for team 1, negative for team 2)</p>
+        <label for="swayInp" id="swayInpShow">0</label>
+        <input type="range" id="swayInp" value="0" min="-50" max="50"
+            onchange="document.getElementById('swayInpShow').innerText = this.value">
+    </fieldset>
+    <button type="button" id="runBtn">run</button>
+    <pre id="output"></pre>
+</body>
+
+</html>
