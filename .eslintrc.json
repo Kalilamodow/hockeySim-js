@@ -11,6 +11,7 @@
         "indent": [
             "warn", 2
         ],
-        "semi": "warn"
+        "semi": "warn",
+        "no-unused-vars": "warn"
     }
 }
