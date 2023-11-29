@@ -1,9 +1,0 @@
-{
-  "name": "hockeysim",
-  "version": "1.0.0",
-  "description": "HockeySim implementation in Javascript",
-  "author": "",
-  "devDependencies": {
-    "eslint": "^8.54.0"
-  }
-}
