@@ -5,20 +5,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>hockeysim.js</title>
+
+    <link rel="stylesheet" href="style.css">
     <script src="hockeySim.js" defer></script>
 </head>
 
 <body>
-    <h1>hockeysim.js</h1>
-    <fieldset>
-        <legend>config</legend>
-        <p>Bias (positive for team 1, negative for team 2)</p>
-        <label for="swayInp" id="swayInpShow">0</label>
-        <input type="range" id="swayInp" value="0" min="-50" max="50"
-            onchange="document.getElementById('swayInpShow').innerText = this.value">
-    </fieldset>
-    <button type="button" id="runBtn">run</button>
-    <pre id="output"></pre>
+    <div id="tnb">
+        <h1>hockeysim.js</h1>
+        <button type="button" id="runBtn">run</button>
+    </div>
+    <main>
+        <table id="scoreboard">
+            <tr>
+                <th>TEAM ONE</th>
+                <th>TYPE</th>
+                <th>TEAM TWO</th>
+            </tr>
+            <tr id="scoreboardGoals">
+                <td></td>
+                <td>Goals</td>
+                <td></td>
+            </tr>
+            <tr id="scoreboardSog">
+                <td></td>
+                <td>Shots on Goal</td>
+                <td></td>
+            </tr>
+            <tr id="scoreboardPenalty">
+                <td></td>
+                <td>Penalties Drawn</td>
+                <td></td>
+            </tr>
+            <tr id="scoreboardGSV">
+                <td></td>
+                <td>Goalie SV%</td>
+                <td></td>
+            </tr>
+        </table>
+
+        <div id="outputCtr">
+            <div id="output">Game Log will show up here</div>
+        </div>
+    </main>
 </body>
 
 </html>

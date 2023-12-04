@@ -1,0 +1,77 @@
+:root {
+    font-family: sans-serif;
+    padding-left: 10%;
+}
+
+#tnb {
+    text-align: center;
+    width: 80%;
+    border-bottom: 2px solid black;
+    padding-bottom: 10px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+button {
+    margin-top: 25px;
+    padding: 5px;
+    width: 100%;
+    height: fit-content;
+    background: white;
+    cursor: pointer;
+    border: 1px solid black;
+    border-radius: 1em;
+    transition-duration: 150ms;
+}
+
+button:hover {
+    background: rgb(207, 207, 207);
+}
+
+main {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: 30% 50%;
+}
+
+main {
+    height: 79vh;
+}
+
+main>#scoreboard {
+    height: fit-content;
+}
+
+#outputCtr {
+    overflow-y: scroll;
+}
+
+#output > div {
+    border: 1px solid black;
+    font-size: 0.9em;
+    padding: 5px;
+}
+
+#output > div > div {
+    float: right;
+}
+
+th:nth-child(2), td:nth-child(2) {
+    text-align: center;
+}
+
+th:first-child, td:first-child {
+    text-align: right;
+}
+
+
+@media screen and (max-width: 800px) {
+    :root {
+        padding-left: 0;
+    }
+
+    main {
+        display: block;
+    }
+}

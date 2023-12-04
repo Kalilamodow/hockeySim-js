@@ -1,13 +1,31 @@
-/**
- * @type {GameEvent[]}
- */
 const gameLog = [];
 const eventProbability = {
-  goal: 40,
-  sog: 2,
-  penalty: -4,
+  goal: 11500,
+  sog: 1250,
+  penalty: 3000,
 };
 
+class Scoreboard {
+  team1 = {
+    goal: 0,
+    sog: 0,
+    penalty: 0,
+  };
+
+  team2 = {
+    goal: 0,
+    sog: 0,
+    penalty: 0,
+  };
+
+  updateBy(team, prop, change) {
+    if (team == 1) {
+      this.team1[prop] += change;
+    } else {
+      this.team2[prop] += change;
+    }
+  }
+}
 
 class Penalty {
   constructor(playerNum, time) {
@@ -35,15 +53,10 @@ class Chances {
     this.reset(skill);
   }
 
-  reset(skill) {
-    let left = 200;
-
-    const goal = Math.round(skill / 10);
-    left -= goal;
-    const sog = Math.round(left / 1.25);
-    left -= sog;
-    const penalty = left;
-    left -= penalty;
+  reset(newMorale) {
+    const sog = eventProbability.sog / newMorale;
+    const goal = eventProbability.goal / newMorale;
+    const penalty = eventProbability.penalty + (newMorale * 5);
 
     this.sog = sog;
     this.goal = goal;
@@ -52,13 +65,30 @@ class Chances {
 }
 
 class GameEvent {
-  constructor(name, teamNum) {
+  name; teamNum; tick;
+
+  constructor(name, teamNum, tick) {
     this.name = name;
     this.teamNum = teamNum;
+    this.tick = tick;
   }
 
-  toString() {
-    return this.name + " by team " + this.teamNum;
+  fmt() {
+    if (this.name == 'sog')
+      return {
+        'text': 'Shot on goal by Team ' + this.teamNum,
+        'style': ''
+      };
+    if (this.name == 'goal')
+      return {
+        'text': 'Goal by Team ' + this.teamNum,
+        'style': 'color: blue; font-weight: bold;'
+      };
+    if (this.name == 'penalty')
+      return {
+        'text': 'Penalty by Team ' + this.teamNum,
+        'style': 'color: red;'
+      };
   }
 }
 
@@ -120,10 +150,10 @@ class Team {
   onEvt(evt) {
     if (evt.teamNum == this.num) {
       // not penalty, so goal or sog
+      // add to gamelog
+      gameLog.push(evt);
       if (evt.name != 'penalty') {
         this.stats[evt.name]++;
-        // add to gamelog
-        gameLog.push(evt);
 
         if (evt.name == 'goal') {
           this.updateMorale(3);
@@ -169,15 +199,49 @@ function maybe(num) {
   return randRange(num) == randRange(num);
 }
 
+function formatTick(ttick) {
+  const pad = c =>
+    `${c.toString().length != 2 ? '0' : ''}${c.toString()}`;
+
+  const period = Math.floor(ttick / 1200) + 1;
+  const ptick = ttick - (period - 1) * 1200;
+
+  const minutes = Math.floor(ptick / 60);
+  const seconds = ptick - minutes * 60;
+
+  return `${19 - minutes}:${pad(Math.abs(60 - seconds))} left in period ${period}`;
+}
+
 
 function run() {
+  // ONLY CONFIG HERE
+  const SKILLS = {
+    1: 20,
+    2: 15,
+  };
+
+  // check if one is higher than the other. If so, subtract
+  if (SKILLS[1] != SKILLS[2]) {
+    if (SKILLS[1] > SKILLS[2]) {
+      SKILLS[1] -= SKILLS[2] - 1;
+      SKILLS[2] -= SKILLS[2] - 1
+    } else {
+      // ELSE IF SKILLS 2 > SKILLS 1
+      SKILLS[2] -= SKILLS[1] - 1;
+      SKILLS[1] -= SKILLS[1] - 1;
+    }
+  }
+
+  document.getElementById("odds").innerHTML = SKILLS[1] + ':' + SKILLS[2];
+
   // we can use [1] and [2] to refer to them by setting
   // index [0] to null
-  const TEAMS = [null, new Team(1, 10), new Team(2, 10)];
+  const TEAMS = [null, new Team(1, SKILLS[1]), new Team(2, SKILLS[2])];
+  const scoreboard = new Scoreboard();
   let zone = randRange(2);
 
   // Minimum separation between events 
-  const MIN_EVT_SEP = 10;
+  const MIN_EVT_SEP = 7;
   let tickSinceLastSep = 0;
 
   // game loop (period 1200 ticks inside game loop three periods)
@@ -192,17 +256,23 @@ function run() {
       const team = TEAMS[randRange(2)];
       let keepGoing = true;
 
+      // loop through possible actions
       ['goal', 'sog', 'penalty'].forEach(name => {
         if (!keepGoing) return;
-        if (maybe(eventProbability[name])) {
-          console.log('zone ', zone);
-          console.log('tick ', tick);
-          team.onEvt(new GameEvent(name, team.num));
+        if (maybe(team.chances[name])) {
+          team.onEvt(new GameEvent(name, team.num, (period - 1) * 1200 + tick));
+          scoreboard.updateBy(team.num, name, 1);
           tickSinceLastSep = 0;
           keepGoing = false;
+
+          if (name == 'goal') {
+            // also update shots on goal on goal
+            scoreboard.updateBy(team.num, 'sog', 1);
+          }
         }
       });
 
+      // switch zone?
       if (maybe(3)) {
         TEAMS[zone].updateMorale(-10, true);
         zone = zone == 1 ? 2 : 1;
@@ -211,9 +281,50 @@ function run() {
     }
   }
 
-  console.log(gameLog);
-  document.getElementById("output").innerText =
-    gameLog.reduce((prev, cur) => prev + "\n" + cur.toString(), "");
+  // set output
+  document.getElementById("output").innerHTML = "";
+  const output = document.createElement('div');
+  gameLog.forEach(evt => {
+    const ele = document.createElement('div');
+    const fmt = evt.fmt();
+    ele.className = 'event';
+    ele.style = fmt.style;
+
+
+    ele.innerHTML = `${fmt.text}<div>${formatTick(evt.tick)}</div>`;
+
+    output.appendChild(ele);
+  });
+
+  gameLog.splice(0, gameLog.length);
+  document.getElementById("output").innerHTML = output.innerHTML;
+
+  document.querySelector('#scoreboardGoals>td:first-child').innerHTML = scoreboard.team1.goal;
+  document.querySelector('#scoreboardSog>td:first-child').innerHTML = scoreboard.team1.sog;
+  document.querySelector('#scoreboardPenalty>td:first-child').innerHTML = scoreboard.team1.penalty;
+
+  document.querySelector('#scoreboardGoals>td:last-child').innerHTML = scoreboard.team2.goal;
+  document.querySelector('#scoreboardSog>td:last-child').innerHTML = scoreboard.team2.sog;
+  document.querySelector('#scoreboardPenalty>td:last-child').innerHTML = scoreboard.team2.penalty;
+
+  function getGoalieSVP(shots, goals) {
+    if (shots == 0) return 'shut';
+    const res = goals / shots * -100 + 100;
+    return Math.round(res * 100) / 100;
+  }
+
+  // save% counted by opposite team
+  document.querySelector('#scoreboardGSV>td:first-child').innerHTML =
+    getGoalieSVP(scoreboard.team2.sog, scoreboard.team2.goal).toString() + '%';
+
+  document.querySelector('#scoreboardGSV>td:last-child').innerHTML =
+    getGoalieSVP(scoreboard.team1.sog, scoreboard.team1.goal).toString() + '%';
 }
 
-document.getElementById("runBtn").addEventListener("click", run);
+document.getElementById("runBtn").addEventListener("click", () => {
+  try {
+    run();
+  } catch (e) {
+    alert(e);
+  }
+});
